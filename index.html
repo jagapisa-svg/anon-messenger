@@ -361,7 +361,7 @@ button:hover {
 <script>
 
 // ===== API URL =====
-const API_URL = "https://smapp.onrender.com"; 
+const API_URL = "https://smapp-31bw.onrender.com"; 
 
 // ===== ELEMENTS =====
 const loginScreen = document.getElementById("loginScreen");
@@ -478,7 +478,7 @@ let currentUserId = localStorage.getItem("userId");
 let currentChatUser = null;
 
 function connectSocket() {
-    socket = new WebSocket("wss://smapp.onrender.com");
+    socket = new WebSocket("wss://smapp-31bw.onrender.com");
 
     socket.onopen = () => {
         socket.send(JSON.stringify({

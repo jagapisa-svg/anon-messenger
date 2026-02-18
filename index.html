@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMAPP Messenger</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background: #0f172a;
+    color: white;
+}
+
+/* ===== BACKGROUND ANIMATION ===== */
+
+.background {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 30%, #363e55, transparent),
+                radial-gradient(circle at 80% 70%, #e5edf1, transparent),
+                radial-gradient(circle at 50% 50%, #0c5497, transparent);
+    animation: moveBg 20s infinite alternate ease-in-out;
+    z-index: -1;
+}
+
+@keyframes moveBg {
+    0% { filter: blur(80px); transform: scale(1); }
+    50% { filter: blur(100px); transform: scale(1.1); }
+    100% { filter: blur(90px); transform: scale(1.05); }
+}
+
+/* ===== SCREENS ===== */
+
+.screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ===== GLASS EFFECT ===== */
+
+.glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+/* ===== LOGIN CARD ===== */
+
+.card {
+    width: 400px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card h2 {
+    text-align: center;
+    font-weight: 600;
+}
+
+.phone-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(233, 228, 228, 0.349);
+}
+
+.flag {
+    font-size: 22px;
+}
+
+input, textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 14px;
+}
+
+textarea {
+    resize: none;
+    height: 80px;
+}
+
+button {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.3s;
+    background: linear-gradient(135deg, #414955, #3e4879);
+    color: white;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+}
+
+.hidden {
+    display: none;
+}
+
+/* ===== APP LAYOUT ===== */
+
+
+.sidebar {
+    width: 300px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.profile-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#3b82f6,#9333ea);
+}
+
+.small-id {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+/* ===== CHAT ===== */
+
+.chat-header {
+    padding: 15px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    padding: 12px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    animation: messageAppear 0.3s ease;
+}
+
+@keyframes messageAppear {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.message.me {
+    align-self: flex-end;
+    background: linear-gradient(135deg,#3b82f6,#9333ea);
+}
+
+.message.other {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.1);
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.chat-input input {
+    padding: 10px;
+}
+
+/* ===== MODAL ===== */
+
+.modal {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+/* МОДАЛКА АКТИВНА */
+.modal.active {
+    display: flex;
+}
+
+/* МОДАЛКА СКРЫТА */
+.modal.hidden {
+    display: none;
+}
+
+
+.modal-content {
+    width: 400px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* ===== SCROLLBAR ===== */
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+}
+
+</style>
+
+
+</head>
+<body>
+
+<!-- DYNAMIC BACKGROUND -->
+<div class="background"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active">
+
+    <div class="card glass">
+
+        <h2>Регистрация</h2>
+
+        <div class="phone-wrapper">
+            <div id="countryFlag" class="flag">🏴</div>
+            <input id="phoneInput" type="text" placeholder="+7 999 000 0000">
+        </div>
+
+        <button id="sendCodeBtn">Получить код</button>
+
+        <div id="codeBlock" class="hidden">
+            <input id="smsCodeInput" type="text" placeholder="Введите код">
+            <button id="verifyBtn">Подтвердить</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen" class="screen">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar glass">
+
+        <div class="profile-mini">
+            <div id="miniAvatar" class="avatar"></div>
+            <div>
+                <div id="miniName">Без имени</div>
+                <div id="miniId" class="small-id"></div>
+            </div>
+        </div>
+
+        <button id="openSettings">⚙ Настройки</button>
+        <button id="openSearch">🔍 Поиск</button>
+        <button id="createGroup">👥 Создать группу</button>
+
+        <div class="chat-list" id="chatList"></div>
+
+    </div>
+
+    <!-- CHAT AREA -->
+    <div class="chat-area">
+
+        <div class="chat-header glass">
+            <div id="chatTitle">Выберите чат</div>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <div class="chat-input glass">
+            <input id="messageInput" type="text" placeholder="Введите сообщение...">
+            <button id="sendMessageBtn">➤</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal hidden">
+
+    <div class="modal-content glass">
+
+        <h3>Настройки профиля</h3>
+
+        <input id="nameInput" placeholder="Имя">
+        <input id="surnameInput" placeholder="Фамилия">
+        <textarea id="bioInput" placeholder="О себе"></textarea>
+<button id="logoutBtn">Выйти</button>
+
+        <div>
+            <div>Ваш ID:</div>
+            <div id="fullUserId"></div>
+            <canvas id="qrCanvas"></canvas>
+        </div>
+
+        <button id="saveProfileBtn">Сохранить</button>
+
+    </div>
+
+</div>
+
+<script>
+
+// ===== API URL =====
+const API_URL = "http://localhost:3000";
+
+// ===== ELEMENTS =====
+const loginScreen = document.getElementById("loginScreen");
+const appScreen = document.getElementById("appScreen");
+
+const phoneInput = document.getElementById("phoneInput");
+const countryFlag = document.getElementById("countryFlag");
+const sendCodeBtn = document.getElementById("sendCodeBtn");
+const codeBlock = document.getElementById("codeBlock");
+const smsCodeInput = document.getElementById("smsCodeInput");
+const verifyBtn = document.getElementById("verifyBtn");
+
+// ===== COUNTRY DATA =====
+const countries = {
+    "+7": { flag: "🇷🇺", length: 11 },
+    "+375": { flag: "🇧🇾", length: 12 },
+    "+1": { flag: "🇺🇸", length: 11 },
+    "+380": { flag: "🇺🇦", length: 12 },
+    "+76": { flag: "🇰🇿", length: 11 },
+    "+86": { flag: "🇨🇳", length: 13 }
+};
+
+// ===== DETECT COUNTRY =====
+function detectCountry(phone) {
+    for (let code in countries) {
+        if (phone.startsWith(code)) {
+            return countries[code];
+        }
+    }
+    return null;
+}
+
+// ===== PHONE INPUT =====
+phoneInput.addEventListener("input", () => {
+    const value = phoneInput.value.trim();
+    const country = detectCountry(value);
+
+    if (country) {
+        countryFlag.textContent = country.flag;
+    } else {
+        countryFlag.textContent = "🏴";
+    }
+});
+
+// ===== SEND SMS =====
+sendCodeBtn.addEventListener("click", async () => {
+
+    const phone = phoneInput.value.trim();
+    const country = detectCountry(phone);
+
+    if (!country) {
+        alert("Неверный код страны");
+        return;
+    }
+
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length !== country.length) {
+        alert("Неверная длина номера");
+        return;
+    }
+
+    const res = await fetch(API_URL + "/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.error);
+        return;
+    }
+
+    codeBlock.classList.remove("hidden");
+});
+
+// ===== VERIFY CODE =====
+verifyBtn.addEventListener("click", async () => {
+
+    const phone = phoneInput.value.trim();
+    const code = smsCodeInput.value.trim();
+
+    const res = await fetch(API_URL + "/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.error);
+        return;
+    }
+
+    currentUserId = data.userId;
+    localStorage.setItem("userId", currentUserId);
+
+    // Плавное скрытие регистрации
+loginScreen.classList.remove("active");
+appScreen.classList.add("active");
+
+connectSocket();
+
+document.getElementById("miniId").textContent =
+    "ID: " + currentUserId;
+
+
+});
+// ===== WEBSOCKET =====
+let socket;
+let currentUserId = localStorage.getItem("userId");
+let currentChatUser = null;
+
+function connectSocket() {
+    socket = new WebSocket("ws://localhost:3000");
+
+    socket.onopen = () => {
+        socket.send(JSON.stringify({
+            type: "connect",
+            userId: currentUserId
+        }));
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "message") {
+            addMessage(data.text, false);
+        }
+    };
+}
+
+// ===== MESSAGE UI =====
+const messagesContainer = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
+const sendMessageBtn = document.getElementById("sendMessageBtn");
+
+function addMessage(text, isMe) {
+    const div = document.createElement("div");
+    div.classList.add("message");
+    div.classList.add(isMe ? "me" : "other");
+    div.textContent = text;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// ===== SEND MESSAGE =====
+sendMessageBtn.addEventListener("click", () => {
+    if (!currentChatUser) {
+        alert("Выберите пользователя");
+        return;
+    }
+
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    socket.send(JSON.stringify({
+        type: "message",
+        from: currentUserId,
+        to: currentChatUser,
+        text
+    }));
+
+    addMessage(text, true);
+    messageInput.value = "";
+});
+
+// ===== SEARCH USER =====
+document.getElementById("openSearch").addEventListener("click", async () => {
+    const id = prompt("Введите ID пользователя");
+
+    if (!id) return;
+
+    const res = await fetch(API_URL + "/user/" + id);
+    if (!res.ok) {
+        alert("Пользователь не найден");
+        return;
+    }
+
+    const user = await res.json();
+
+    currentChatUser = user.id;
+    document.getElementById("chatTitle").textContent =
+        (user.name || "Пользователь") + " " + (user.surname || "");
+
+});
+
+// ===== PROFILE SETTINGS =====
+const settingsModal = document.getElementById("settingsModal");
+const openSettings = document.getElementById("openSettings");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+
+openSettings.addEventListener("click", () => {
+
+    if (!currentUserId) return;
+
+    settingsModal.classList.remove("hidden");
+    settingsModal.classList.add("active");
+
+    document.getElementById("fullUserId").textContent = currentUserId;
+    generateQR(currentUserId);
+
+});
+
+saveProfileBtn.addEventListener("click", async () => {
+
+    const name = document.getElementById("nameInput").value;
+    const surname = document.getElementById("surnameInput").value;
+    const bio = document.getElementById("bioInput").value;
+
+    await fetch(API_URL + "/updateProfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            id: currentUserId,
+            name,
+            surname,
+            bio,
+            avatar: ""
+        })
+    });
+
+    settingsModal.classList.remove("active");
+    settingsModal.classList.add("hidden");
+
+    document.getElementById("miniName").textContent =
+        name || "Без имени";
+    document.getElementById("miniId").textContent =
+        "ID: " + currentUserId;
+
+});
+
+// ===== QR CODE =====
+function generateQR(text) {
+    const canvas = document.getElementById("qrCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = 200;
+    canvas.height = 200;
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, 200, 200);
+
+    ctx.fillStyle = "black";
+
+    for (let i = 0; i < text.length; i++) {
+        ctx.fillRect(
+            (i * 10) % 200,
+            Math.floor(i / 20) * 10,
+            8,
+            8
+        );
+    }
+}
+
+// ===== CREATE GROUP =====
+document.getElementById("createGroup").addEventListener("click", async () => {
+
+    const name = prompt("Название группы");
+
+    if (!name) return;
+
+    const res = await fetch(API_URL + "/createGroup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name,
+            owner: currentUserId
+        })
+    });
+
+    const data = await res.json();
+    alert("Группа создана. ID: " + data.groupId);
+
+});
+
+// ===== FORCE START WITH LOGIN =====
+window.addEventListener("load", () => {
+
+    loginScreen.classList.add("active");
+    appScreen.classList.remove("active");
+    settingsModal.classList.add("hidden");
+
+});
+
+</script>
+
+
+</body>
+</html>
